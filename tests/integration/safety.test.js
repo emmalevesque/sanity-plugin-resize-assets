@@ -1,8 +1,9 @@
-const { describe, it, expect, beforeEach, afterEach } = require('vitest');
-const fs = require('fs');
-const path = require('path');
-const { execSync } = require('child_process');
-const { createTestTarball, extractAndValidate } = require('../fixtures/test-helpers');
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import fs from 'fs';
+import path from 'path';
+import { execSync } from 'child_process';
+import crypto from 'crypto';
+import { createTestTarball, extractAndValidate } from '../fixtures/test-helpers.js';
 
 describe('Safety and Edge Cases', () => {
   let testTarball;
@@ -28,13 +29,13 @@ describe('Safety and Edge Cases', () => {
 
     // Get original tarball hash
     const originalContent = fs.readFileSync(testTarball);
-    const originalHash = require('crypto')
+    const originalHash = crypto
       .createHash('md5')
       .update(originalContent)
       .digest('hex');
 
     // Try to process with invalid output path (should fail)
-    const scriptPath = path.join(__dirname, '../../resize-sanity-images.js');
+    const scriptPath = path.join(process.cwd(), 'resize-sanity-images.cjs');
     const invalidOutput = '/invalid/path/that/does/not/exist/output.tar.gz';
 
     try {
@@ -47,7 +48,7 @@ describe('Safety and Edge Cases', () => {
 
     // Original tarball should be unchanged
     const currentContent = fs.readFileSync(testTarball);
-    const currentHash = require('crypto')
+    const currentHash = crypto
       .createHash('md5')
       .update(currentContent)
       .digest('hex');
@@ -60,7 +61,7 @@ describe('Safety and Edge Cases', () => {
 
     const cwdBefore = fs.readdirSync(process.cwd());
 
-    const scriptPath = path.join(__dirname, '../../resize-sanity-images.js');
+    const scriptPath = path.join(process.cwd(), 'resize-sanity-images.cjs');
     execSync(`node "${scriptPath}" "${testTarball}" --output "${outputTarball}"`, {
       stdio: 'pipe'
     });
@@ -80,7 +81,7 @@ describe('Safety and Edge Cases', () => {
     fs.mkdirSync(tempDir, { recursive: true });
     fs.writeFileSync(path.join(tempDir, 'invalid.txt'), 'not a valid structure');
 
-    const tar = require('tar');
+    const tar = await import('tar');
     await tar.c({
       gzip: true,
       file: testTarball,
@@ -90,7 +91,7 @@ describe('Safety and Edge Cases', () => {
     fs.rmSync(tempDir, { recursive: true, force: true });
 
     const cwdBefore = fs.readdirSync(process.cwd());
-    const scriptPath = path.join(__dirname, '../../resize-sanity-images.js');
+    const scriptPath = path.join(process.cwd(), 'resize-sanity-images.cjs');
 
     try {
       execSync(`node "${scriptPath}" "${testTarball}" --output "${outputTarball}"`, {
@@ -124,7 +125,7 @@ describe('Safety and Edge Cases', () => {
       img.filename.includes(imageData[0].hash)
     );
 
-    const scriptPath = path.join(__dirname, '../../resize-sanity-images.js');
+    const scriptPath = path.join(process.cwd(), 'resize-sanity-images.cjs');
     execSync(`node "${scriptPath}" "${testTarball}" --dry-run`, {
       stdio: 'pipe'
     });
@@ -150,7 +151,7 @@ describe('Safety and Edge Cases', () => {
       imageSizes: [{ width: 5000, height: 4000 }]
     });
 
-    const scriptPath = path.join(__dirname, '../../resize-sanity-images.js');
+    const scriptPath = path.join(process.cwd(), 'resize-sanity-images.cjs');
     execSync(`node "${scriptPath}" "${testTarball}" --output "${outputTarball}"`, {
       stdio: 'pipe'
     });
@@ -182,7 +183,7 @@ describe('Safety and Edge Cases', () => {
 
     await createTestTarball(specialPathTarball, { numImages: 1 });
 
-    const scriptPath = path.join(__dirname, '../../resize-sanity-images.js');
+    const scriptPath = path.join(process.cwd(), 'resize-sanity-images.cjs');
     execSync(`node "${scriptPath}" "${specialPathTarball}" --output "${specialPathOutput}"`, {
       stdio: 'pipe'
     });
@@ -199,7 +200,7 @@ describe('Safety and Edge Cases', () => {
       ]
     });
 
-    const scriptPath = path.join(__dirname, '../../resize-sanity-images.js');
+    const scriptPath = path.join(process.cwd(), 'resize-sanity-images.cjs');
 
     // First processing
     execSync(`node "${scriptPath}" "${testTarball}" --output "${outputTarball}"`, {
@@ -242,7 +243,7 @@ describe('Safety and Edge Cases', () => {
   }, 60000);
 
   it('should validate required command line arguments', () => {
-    const scriptPath = path.join(__dirname, '../../resize-sanity-images.js');
+    const scriptPath = path.join(process.cwd(), 'resize-sanity-images.cjs');
 
     // No arguments
     expect(() => {
@@ -259,7 +260,7 @@ describe('Safety and Edge Cases', () => {
       ]
     });
 
-    const scriptPath = path.join(__dirname, '../../resize-sanity-images.js');
+    const scriptPath = path.join(process.cwd(), 'resize-sanity-images.cjs');
     const output = execSync(`node "${scriptPath}" "${testTarball}" --output "${outputTarball}"`, {
       encoding: 'utf8'
     });
@@ -279,7 +280,7 @@ describe('Safety and Edge Cases', () => {
       imageSizes: [{ width: 5000, height: 4000 }]
     });
 
-    const scriptPath = path.join(__dirname, '../../resize-sanity-images.js');
+    const scriptPath = path.join(process.cwd(), 'resize-sanity-images.cjs');
     execSync(`node "${scriptPath}" "${testTarball}" --output "${outputTarball}"`, {
       stdio: 'pipe'
     });

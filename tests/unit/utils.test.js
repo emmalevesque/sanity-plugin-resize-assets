@@ -1,5 +1,5 @@
-const { describe, it, expect } = require('vitest');
-const { parseFilename } = require('../fixtures/test-helpers');
+import { describe, it, expect } from 'vitest';
+import { parseFilename } from '../fixtures/test-helpers.js';
 
 describe('parseFilename', () => {
   it('should parse valid Sanity image filename', () => {

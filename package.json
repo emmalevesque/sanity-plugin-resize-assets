@@ -4,7 +4,7 @@
   "type": "module",
   "main": "index.js",
   "bin": {
-    "resize-sanity-images": "./resize-sanity-images.js"
+    "resize-sanity-images": "./resize-sanity-images.cjs"
   },
   "scripts": {
     "test": "vitest run",

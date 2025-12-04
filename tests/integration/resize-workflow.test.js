@@ -1,8 +1,8 @@
-const { describe, it, expect, beforeEach, afterEach } = require('vitest');
-const fs = require('fs');
-const path = require('path');
-const { execSync } = require('child_process');
-const { createTestTarball, extractAndValidate } = require('../fixtures/test-helpers');
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import fs from 'fs';
+import path from 'path';
+import { execSync } from 'child_process';
+import { createTestTarball, extractAndValidate } from '../fixtures/test-helpers.js';
 
 describe('Image Resize Workflow', () => {
   let testTarball;
@@ -39,7 +39,7 @@ describe('Image Resize Workflow', () => {
     });
 
     // Run the script
-    const scriptPath = path.join(__dirname, '../../resize-sanity-images.js');
+    const scriptPath = path.join(process.cwd(), 'resize-sanity-images.cjs');
     execSync(`node "${scriptPath}" "${testTarball}" --output "${outputTarball}" --max-size 3600 --max-filesize 3`, {
       stdio: 'pipe'
     });
@@ -93,7 +93,7 @@ describe('Image Resize Workflow', () => {
   it('should handle dry-run mode without making changes', async () => {
     await createTestTarball(testTarball, { numImages: 2 });
 
-    const scriptPath = path.join(__dirname, '../../resize-sanity-images.js');
+    const scriptPath = path.join(process.cwd(), 'resize-sanity-images.cjs');
     const output = execSync(`node "${scriptPath}" "${testTarball}" --output "${outputTarball}" --dry-run`, {
       encoding: 'utf8'
     });
@@ -115,7 +115,7 @@ describe('Image Resize Workflow', () => {
       ]
     });
 
-    const scriptPath = path.join(__dirname, '../../resize-sanity-images.js');
+    const scriptPath = path.join(process.cwd(), 'resize-sanity-images.cjs');
     execSync(`node "${scriptPath}" "${testTarball}" --output "${outputTarball}" --max-size 3600`, {
       stdio: 'pipe'
     });
@@ -151,7 +151,7 @@ describe('Image Resize Workflow', () => {
       imageSizes: [{ width: 4000, height: 3000 }]
     });
 
-    const scriptPath = path.join(__dirname, '../../resize-sanity-images.js');
+    const scriptPath = path.join(process.cwd(), 'resize-sanity-images.cjs');
 
     // Low quality
     const outputLow = outputTarball.replace('.tar.gz', '-low.tar.gz');
@@ -184,7 +184,7 @@ describe('Image Resize Workflow', () => {
       ]
     });
 
-    const scriptPath = path.join(__dirname, '../../resize-sanity-images.js');
+    const scriptPath = path.join(process.cwd(), 'resize-sanity-images.cjs');
     const output = execSync(`node "${scriptPath}" "${testTarball}" --output "${outputTarball}" --max-size 3600`, {
       encoding: 'utf8'
     });
@@ -214,7 +214,7 @@ describe('Image Resize Workflow', () => {
       ]
     });
 
-    const scriptPath = path.join(__dirname, '../../resize-sanity-images.js');
+    const scriptPath = path.join(process.cwd(), 'resize-sanity-images.cjs');
     execSync(`node "${scriptPath}" "${testTarball}" --output "${outputTarball}" --max-size 3600`, {
       stdio: 'pipe'
     });
@@ -242,7 +242,7 @@ describe('Image Resize Workflow', () => {
       imageSizes: [{ width: 5000, height: 4000 }]
     });
 
-    const scriptPath = path.join(__dirname, '../../resize-sanity-images.js');
+    const scriptPath = path.join(process.cwd(), 'resize-sanity-images.cjs');
     execSync(`node "${scriptPath}" "${testTarball}" --output "${outputTarball}" --max-size 3600`, {
       stdio: 'pipe'
     });
@@ -269,7 +269,7 @@ describe('Image Resize Workflow', () => {
   }, 30000);
 
   it('should handle missing input file gracefully', () => {
-    const scriptPath = path.join(__dirname, '../../resize-sanity-images.js');
+    const scriptPath = path.join(process.cwd(), 'resize-sanity-images.cjs');
     const nonExistentFile = '/tmp/does-not-exist.tar.gz';
 
     expect(() => {
@@ -288,7 +288,7 @@ describe('Image Resize Workflow', () => {
     fs.mkdirSync(path.join(tempDir, 'images'), { recursive: true });
     fs.writeFileSync(path.join(tempDir, 'data.ndjson'), '{}');
 
-    const tar = require('tar');
+    const tar = await import('tar');
     await tar.c({
       gzip: true,
       file: invalidTarball,
@@ -297,7 +297,7 @@ describe('Image Resize Workflow', () => {
 
     fs.rmSync(tempDir, { recursive: true, force: true });
 
-    const scriptPath = path.join(__dirname, '../../resize-sanity-images.js');
+    const scriptPath = path.join(process.cwd(), 'resize-sanity-images.cjs');
 
     expect(() => {
       execSync(`node "${scriptPath}" "${invalidTarball}" --output "${outputTarball}"`, {

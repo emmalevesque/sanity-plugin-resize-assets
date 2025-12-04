@@ -1,7 +1,7 @@
-const fs = require('fs');
-const path = require('path');
-const sharp = require('sharp');
-const tar = require('tar');
+import fs from 'fs';
+import path from 'path';
+import sharp from 'sharp';
+import * as tar from 'tar';
 
 /**
  * Creates a test image with specified dimensions
@@ -202,7 +202,7 @@ function parseFilename(filename) {
   };
 }
 
-module.exports = {
+export {
   createTestImage,
   createTestTarball,
   extractAndValidate,
