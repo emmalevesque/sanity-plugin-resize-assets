@@ -7,9 +7,10 @@
     "resize-sanity-images": "./resize-sanity-images.cjs"
   },
   "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage",
+    "build": "bun build src/cli/index.ts --outdir dist --target bun"
   },
   "keywords": [],
   "author": "",
@@ -20,7 +21,9 @@
     "tar": "^7.5.2"
   },
   "devDependencies": {
-    "vitest": "^2.1.8",
-    "@vitest/coverage-v8": "^2.1.8"
+    "@types/bun": "^1.3.4",
+    "@types/tar": "^6.1.13",
+    "@vitest/coverage-v8": "^2.1.8",
+    "vitest": "^2.1.8"
   }
 }
