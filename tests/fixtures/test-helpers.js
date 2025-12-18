@@ -33,13 +33,18 @@ async function createTestTarball(outputPath, options = {}) {
       { width: 2000, height: 1500, size: 2 * 1024 * 1024 }, // Medium - ok
       { width: 1920, height: 1080, size: 1.5 * 1024 * 1024 }, // Standard - ok
       { width: 800, height: 600, size: 0.5 * 1024 * 1024 }  // Small - ok
-    ]
+    ],
+    includeFiles = false
   } = options;
 
   const tempDir = path.join(process.cwd(), `.test-export-${Date.now()}`);
   const imagesDir = path.join(tempDir, 'images');
+  const filesDir = path.join(tempDir, 'files');
 
   fs.mkdirSync(imagesDir, { recursive: true });
+  if (includeFiles) {
+    fs.mkdirSync(filesDir, { recursive: true });
+  }
 
   const assets = {};
   const dataLines = [];
@@ -98,6 +103,39 @@ async function createTestTarball(outputPath, options = {}) {
     imageData.push({ hash, filename, width, height, size: stats.size });
   }
 
+  // Optionally add a PDF file and corresponding file asset
+  let fileAssetData = null;
+  if (includeFiles) {
+    const fileHash = `filehash${Math.random().toString(36).substring(7)}`.padEnd(40, '0');
+    const fileName = `${fileHash}.pdf`;
+    const filePath = path.join(filesDir, fileName);
+    // Create a dummy PDF-like file (not a valid PDF, but sufficient for presence checks)
+    const dummyContent = Buffer.from('%PDF-1.4\n%\u00E2\u00E3\u00CF\u00D3\n1 0 obj\n<< /Type /Catalog >>\nendobj\n');
+    fs.writeFileSync(filePath, dummyContent);
+    const fstats = fs.statSync(filePath);
+
+    assets[`file-${fileHash}`] = {
+      _id: `file-${fileHash}`,
+      assetId: fileHash,
+      path: `files/${fileName}`,
+      url: `https://cdn.sanity.io/files/project/dataset/${fileName}`,
+      mimeType: 'application/pdf',
+      size: fstats.size
+    };
+
+    // Add file asset doc
+    dataLines.push(JSON.stringify({
+      _id: `file-${fileHash}`,
+      _type: 'sanity.fileAsset',
+      assetId: fileHash,
+      path: `files/${fileName}`,
+      url: `https://cdn.sanity.io/files/project/dataset/${fileName}`,
+      mimeType: 'application/pdf'
+    }));
+
+    fileAssetData = { hash: fileHash, filename: fileName, size: fstats.size };
+  }
+
   // Write assets.json
   fs.writeFileSync(
     path.join(tempDir, 'assets.json'),
@@ -115,12 +153,12 @@ async function createTestTarball(outputPath, options = {}) {
     gzip: true,
     file: outputPath,
     cwd: tempDir
-  }, ['images', 'assets.json', 'data.ndjson']);
+  }, includeFiles ? ['files', 'images', 'assets.json', 'data.ndjson'] : ['images', 'assets.json', 'data.ndjson']);
 
   // Cleanup temp dir
   fs.rmSync(tempDir, { recursive: true, force: true });
 
-  return { tarballPath: outputPath, imageData, assets };
+  return { tarballPath: outputPath, imageData, assets, fileAssetData };
 }
 
 /**
@@ -136,11 +174,13 @@ async function extractAndValidate(tarballPath) {
   });
 
   const imagesDir = path.join(tempDir, 'images');
+  const filesDir = path.join(tempDir, 'files');
   const assetsJsonPath = path.join(tempDir, 'assets.json');
   const dataNdjsonPath = path.join(tempDir, 'data.ndjson');
 
   const exists = {
     images: fs.existsSync(imagesDir),
+    files: fs.existsSync(filesDir),
     assetsJson: fs.existsSync(assetsJsonPath),
     dataNdjson: fs.existsSync(dataNdjsonPath)
   };
@@ -148,6 +188,7 @@ async function extractAndValidate(tarballPath) {
   let assets = null;
   let dataLines = [];
   let images = [];
+  let files = [];
 
   if (exists.assetsJson) {
     assets = JSON.parse(fs.readFileSync(assetsJsonPath, 'utf8'));
@@ -177,12 +218,23 @@ async function extractAndValidate(tarballPath) {
     }
   }
 
+  if (exists.files) {
+    const fileList = fs.readdirSync(filesDir);
+    for (const fname of fileList) {
+      const fpath = path.join(filesDir, fname);
+      const fstats = fs.statSync(fpath);
+      const md5 = require('crypto').createHash('md5').update(fs.readFileSync(fpath)).digest('hex');
+      files.push({ filename: fname, size: fstats.size, md5 });
+    }
+  }
+
   return {
     tempDir,
     exists,
     assets,
     dataLines,
     images,
+    files,
     cleanup: () => fs.rmSync(tempDir, { recursive: true, force: true })
   };
 }

@@ -4,6 +4,7 @@ node_modules
 coverage/
 .test-*
 test-*.tar.gz
+*.gz
 
 # Temp directories
 .sanity-resize-tmp-*

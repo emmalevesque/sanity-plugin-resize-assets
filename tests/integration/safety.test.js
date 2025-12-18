@@ -296,4 +296,37 @@ describe('Safety and Edge Cases', () => {
       result.cleanup();
     }
   }, 30000);
+
+  it('should preserve files/ directory and non-image assets (e.g., PDFs)', async () => {
+    const { fileAssetData } = await createTestTarball(testTarball, {
+      numImages: 1,
+      imageSizes: [{ width: 4000, height: 3000 }],
+      includeFiles: true
+    });
+
+    // Extract original to capture file hash/size
+    const original = await extractAndValidate(testTarball);
+    expect(original.exists.files).toBe(true);
+    const originalPdf = original.files.find(f => f.filename === fileAssetData.filename);
+    expect(originalPdf).toBeDefined();
+
+    const scriptPath = path.join(process.cwd(), 'resize-sanity-images.cjs');
+    execSync(`node "${scriptPath}" "${testTarball}" --output "${outputTarball}"`, {
+      stdio: 'pipe'
+    });
+
+    const result = await extractAndValidate(outputTarball);
+    try {
+      // files/ must be present and contain the same PDF unchanged
+      expect(result.exists.files).toBe(true);
+      const pdf = result.files.find(f => f.filename === fileAssetData.filename);
+      expect(pdf).toBeDefined();
+      // Validate size/hash match to ensure preservation
+      expect(pdf.size).toBe(originalPdf.size);
+      expect(pdf.md5).toBe(originalPdf.md5);
+    } finally {
+      original.cleanup();
+      result.cleanup();
+    }
+  }, 30000);
 });

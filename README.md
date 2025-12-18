@@ -83,12 +83,15 @@ resize-sanity-images export.tar.gz --quality 90
 
 ## Sanity Export Structure
 
-The tool expects a tarball with the following structure:
+The tool expects a tarball with the following structure. If a `files/` directory exists (e.g., PDFs or other non-image assets), it is preserved unchanged in the output tarball so subsequent imports can locate those assets.
 
 ```
 export.tar.gz
 ├── images/
 │   ├── {hash}-{width}x{height}.{ext}
+│   └── ...
+├── files/ (optional)
+│   ├── {assetHash}.pdf
 │   └── ...
 ├── assets.json
 └── data.ndjson

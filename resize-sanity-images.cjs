@@ -401,11 +401,20 @@ async function main() {
 
     // Phase 9: Repackage tarball
     log('[i]', colors.cyan, 'Creating output tarball...');
+
+    // Always include images, assets.json, data.ndjson. Preserve files/ if present (e.g., PDFs).
+    const entries = ['images', 'assets.json', 'data.ndjson'];
+    const filesDir = path.join(workingDir, 'files');
+    if (fs.existsSync(filesDir) && fs.statSync(filesDir).isDirectory()) {
+      log('[i]', colors.cyan, 'Preserving non-image assets in files/ directory');
+      entries.unshift('files');
+    }
+
     await tar.c({
       gzip: true,
       file: options.output,
       cwd: workingDir
-    }, ['images', 'assets.json', 'data.ndjson']);
+    }, entries);
 
     const outputSize = fs.statSync(options.output).size;
 
