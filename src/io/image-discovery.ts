@@ -13,7 +13,13 @@ export function discoverImages(
   imagesDir: string,
   options: ProcessingOptions
 ): ImageMetadata[] {
-  const imageFiles = readDir(imagesDir);
+  let imageFiles: string[];
+  try {
+    imageFiles = readDir(imagesDir);
+  } catch (error) {
+    // Directory doesn't exist or can't be read
+    return [];
+  }
   const images: ImageMetadata[] = [];
 
   for (const filename of imageFiles) {

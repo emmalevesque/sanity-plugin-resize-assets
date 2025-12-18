@@ -11,7 +11,8 @@ import type { ParsedFilename } from './types';
  */
 export function parseFilename(filename: string): ParsedFilename | null {
   // Expected format: {hash}-{width}x{height}.{ext}
-  const match = filename.match(/^([a-f0-9]+)-(\d+)x(\d+)\.([a-z]+)$/i);
+  // Hash can be alphanumeric (test helpers use base-36, real Sanity uses hex)
+  const match = filename.match(/^([a-z0-9]+)-(\d+)x(\d+)\.([a-z]+)$/i);
 
   if (!match) {
     return null;
